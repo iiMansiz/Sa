@@ -7,6 +7,32 @@ $router = new Router();
 
 // ... (rute lain)
 
+
+// ... (rute lain)
+
+// ... (rute lain)
+
+// Rute Promosi (Admin)
+$router->add('GET', '/admin/promotions', 'PromotionController', 'index');
+$router->add('GET', '/admin/promotions/add', 'PromotionController', 'add');
+$router->add('POST', '/admin/promotions/add', 'PromotionController', 'add');
+$router->add('GET', '/admin/promotions/edit/([0-9]+)', 'PromotionController', 'edit');
+$router->add('POST', '/admin/promotions/edit/([0-9]+)', 'PromotionController', 'edit');
+$router->add('GET', '/admin/promotions/delete/([0-9]+)', 'PromotionController', 'delete');
+$router->add('GET', '/admin/promotions/manage/([0-9]+)', 'PromotionController', 'manageProducts');
+$router->add('POST', '/admin/promotions/manage/([0-9]+)', 'PromotionController', 'manageProducts');
+
+// Rute Pengiriman (Admin)
+$router->add('GET', '/admin/shipping', 'ShippingController', 'index');
+$router->add('GET', '/admin/shipping/add', 'ShippingController', 'add');
+$router->add('POST', '/admin/shipping/add', 'ShippingController', 'add');
+$router->add('GET', '/admin/shipping/edit/([0-9]+)', 'ShippingController', 'edit');
+$router->add('POST', '/admin/shipping/edit/([0-9]+)', 'ShippingController', 'edit');
+$router->add('GET', '/admin/shipping/delete/([0-9]+)', 'ShippingController', 'delete');
+
+// ... (rute lain)
+
+
 // Rute Review
 $router->add('POST', '/review/add/([0-9]+)', 'ReviewController', 'add');
 
