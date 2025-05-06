@@ -63,3 +63,14 @@ CREATE TABLE notifications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+CREATE TABLE seller_ratings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    seller_id INT NOT NULL,
+    user_id INT NOT NULL, -- Pembeli yang memberikan rating
+    rating INT NOT NULL, -- Contoh: 1-5 bintang
+    komentar TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY (seller_id, user_id) -- Satu pembeli hanya bisa memberi satu rating per penjual
+);
