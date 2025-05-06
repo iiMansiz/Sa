@@ -4,62 +4,52 @@ require_once 'core/Session.php';
 require_once 'models/Product.php';
 require_once 'models/Cart.php';
 
-class CartController extends Controller {
-    private $productModel;
+class ProductController extends Controller {
+    // ... (constructor)
 
-    public function __construct() {
-        Session::start();
-        $this->productModel = $this->model('Product');
-    }
+    public function detail($id) {
+        $product = $this->productModel->find($id);
+        $images = $this->productModel->getProductImages($id);
+        $variations = $this->productModel->getProductVariations($id);
+        $reviews = $this->model('Review')->getReviewsByProduct($id);
 
-    public function index() {
-        $cartItems = Cart::getItems();
-        $productsInCart = [];
-        $totalPrice = 0;
-
-        foreach ($cartItems as $productId => $quantity) {
-            $product = $this->productModel->find($productId);
-            if ($product) {
-                $product['quantity'] = $quantity;
-                $productsInCart[] = $product;
-                $totalPrice += $product['harga'] * $quantity;
-            } else {
-                Cart::removeItem($productId); // Hapus jika produk tidak ditemukan
-            }
+        if ($product) {
+            $this->view('buyer/product_detail', ['product' => $product, 'images' => $images, 'variations' => $variations, 'reviews' => $reviews]);
+        } else {
+            $this->view('errors/404');
         }
-
-        $this->view('buyer/cart', ['cartItems' => $productsInCart, 'totalPrice' => $totalPrice]);
     }
+
+    // ...
+}
+
+class CartController extends Controller {
+    // ... (constructor)
 
     public function add($productId) {
         if (!Session::get('user_id')) {
-            $this->redirect('/auth/login'); // Harus login dulu
+            $this->redirect('/auth/login');
             return;
         }
-        Cart::addItem($productId);
-        $this->redirect('/cart');
-    }
 
-    public function update($productId) {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $quantity = (int) $_POST['quantity'];
-            if ($quantity > 0) {
-                Cart::updateItem($productId, $quantity);
-            } else {
-                Cart::removeItem($productId);
-            }
+        $quantity = $_POST['quantity'] ?? 1;
+        $variationId = $_POST['variation_id'] ?? null; // Jika ada variasi
+
+        // Logic untuk menambahkan ke keranjang dengan mempertimbangkan variasi
+        $cartKey = 'shopping_cart_' . Session::get('user_id');
+        $cart = Session::get($cartKey, []);
+        $itemKey = $productId . ($variationId ? '_' . $variationId : '');
+
+        if (isset($cart[$itemKey])) {
+            $cart[$itemKey] += $quantity;
+        } else {
+            $cart[$itemKey] = $quantity;
         }
+        Session::set($cartKey, $cart);
+
         $this->redirect('/cart');
     }
 
-    public function remove($productId) {
-        Cart::removeItem($productId);
-        $this->redirect('/cart');
-    }
-
-    public function clear() {
-        Cart::clear();
-        $this->redirect('/cart');
-    }
+    // ... (metode lain perlu disesuaikan untuk menangani key keranjang dengan variasi)
 }
-?>
+
