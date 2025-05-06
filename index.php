@@ -7,6 +7,36 @@ $router = new Router();
 
 // ... (rute lain)
 
+// Rute Voucher (Admin)
+$router->add('GET', '/admin/vouchers', 'PromotionController', 'adminVouchers');
+$router->add('GET', '/admin/vouchers/add', 'PromotionController', 'adminAddVoucher');
+$router->add('POST', '/admin/vouchers/add', 'PromotionController', 'adminAddVoucher');
+$router->add('GET', '/admin/vouchers/edit/([0-9]+)', 'PromotionController', 'adminEditVoucher');
+$router->add('POST', '/admin/vouchers/edit/([0-9]+)', 'PromotionController', 'adminEditVoucher');
+$router->add('GET', '/admin/vouchers/delete/([0-9]+)', 'PromotionController', 'adminDeleteVoucher');
+
+// Rute Voucher (Seller)
+$router->add('GET', '/seller/vouchers', 'PromotionController', 'sellerVouchers');
+$router->add('GET', '/seller/vouchers/add', 'PromotionController', 'sellerAddVoucher');
+$router->add('POST', '/seller/vouchers/add', 'PromotionController', 'sellerAddVoucher');
+$router->add('GET', '/seller/vouchers/edit/([0-9]+)', 'PromotionController', 'sellerEditVoucher');
+$router->add('POST', '/seller/vouchers/edit/([0-9]+)', 'PromotionController', 'sellerEditVoucher');
+$router->add('GET', '/seller/vouchers/delete/([0-9]+)', 'PromotionController', 'sellerDeleteVoucher');
+
+// Rute Apply Voucher
+$router->add('POST', '/cart/apply-voucher', 'CartController', 'applyVoucher');
+
+// Rute Laporan (Admin)
+$router->add('GET', '/admin/reports/sales', 'ReportController', 'adminSalesOverview');
+$router->add('GET', '/admin/reports/products', 'ReportController', 'adminProductPerformance');
+
+// Rute Laporan (Seller)
+$router->add('GET', '/seller/reports/sales', 'ReportController', 'sellerSalesOverview');
+$router->add('GET', '/seller/reports/products', 'ReportController', 'sellerProductPerformance');
+
+// ... (rute lain)
+
+
 // Rute Notifikasi
 $router->add('GET', '/notifications', 'NotificationController', 'index');
 $router->add('POST', '/notifications/read/([0-9]+)', 'NotificationController', 'markAsRead');
