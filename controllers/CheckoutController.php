@@ -60,6 +60,7 @@ class CheckoutController extends Controller {
             $orderId = $this->orderModel->insert($orderData);
 
             $totalAmount = 0;
+            $orderSuccess = true;
             foreach ($cartItems as $productId => $quantity) {
                 $product = $this->productModel->find($productId);
                 if ($product && $product['stok'] >= $quantity) {
@@ -77,22 +78,24 @@ class CheckoutController extends Controller {
                     $newStok = $product['stok'] - $quantity;
                     $this->productModel->update($productId, ['stok' => $newStok]);
                 } else {
-                    // Batalkan pesanan atau berikan notifikasi kesalahan (implementasi lebih lanjut)
                     $this->orderModel->delete($orderId);
                     Cart::clear();
                     Session::set('error_message', 'Beberapa produk tidak tersedia atau stok tidak mencukupi.');
                     $this->redirect('/cart');
-                    return;
+                    $orderSuccess = false;
+                    break;
                 }
             }
 
-            // Update total amount pesanan
-            $this->orderModel->update($orderId, ['total_amount' => $totalAmount]);
+            if ($orderSuccess) {
+                // Update total amount pesanan
+                $this->orderModel->update($orderId, ['total_amount' => $totalAmount]);
 
-            // Bersihkan keranjang setelah pesanan berhasil
-            Cart::clear();
-            Session::set('success_message', 'Pesanan Anda berhasil dibuat dengan nomor: ' . $orderId);
-            $this->redirect('/orders'); // Redirect ke riwayat pesanan
+                // Bersihkan keranjang setelah pesanan berhasil dibuat
+                Cart::clear();
+                $this->redirect('/payment/' . $orderId); // Alihkan ke halaman pembayaran
+            }
+
         } else {
             $this->redirect('/checkout');
         }
