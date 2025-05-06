@@ -1,43 +1,45 @@
 <?php
+require_once 'autoload.php';
+require_once 'core/Session.php';
+Session::start();
 
-declare(strict_types=1);
+$router = new Router();
 
-use PhpMyAdmin\Common;
-use PhpMyAdmin\Routing;
+// Rute Auth
+$router->add('GET', '/auth/login', 'AuthController', 'login');
+$router->add('POST', '/auth/login', 'AuthController', 'login');
+$router->add('GET', '/auth/register', 'AuthController', 'register');
+$router->add('POST', '/auth/register', 'AuthController', 'register');
+$router->add('GET', '/auth/logout', 'AuthController', 'logout');
 
-if (! defined('ROOT_PATH')) {
-    // phpcs:disable PSR1.Files.SideEffects
-    define('ROOT_PATH', __DIR__ . DIRECTORY_SEPARATOR);
-    // phpcs:enable
-}
+// Rute Pembeli
+$router->add('GET', '/', 'HomeController', 'index');
+$router->add('GET', '/products', 'HomeController', 'index');
+$router->add('GET', '/product/([0-9]+)', 'ProductController', 'detail');
+// ... rute pembeli lainnya (cart, checkout, orders)
 
-if (PHP_VERSION_ID < 70205) {
-    die('<p>PHP 7.2.5+ is required.</p><p>Currently installed version is: ' . PHP_VERSION . '</p>');
-}
+// Rute Penjual
+$router->add('GET', '/seller/dashboard', 'SellerController', 'dashboard');
+$router->add('GET', '/seller/products', 'SellerController', 'productList');
+$router->add('GET', '/seller/products/add', 'SellerController', 'addProduct');
+$router->add('POST', '/seller/products/add', 'SellerController', 'addProduct');
+$router->add('GET', '/seller/products/edit/([0-9]+)', 'SellerController', 'editProduct');
+$router->add('POST', '/seller/products/edit/([0-9]+)', 'SellerController', 'editProduct');
+$router->add('GET', '/seller/orders', 'SellerController', 'orderList');
+// ... rute penjual lainnya
 
-// phpcs:disable PSR1.Files.SideEffects
-define('PHPMYADMIN', true);
-// phpcs:enable
+// Rute Admin
+$router->add('GET', '/admin/dashboard', 'AdminController', 'dashboard');
+$router->add('GET', '/admin/users', 'AdminController', 'userList');
+$router->add('GET', '/admin/products', 'AdminController', 'productList');
+$router->add('GET', '/admin/orders', 'AdminController', 'orderList');
+// ... rute admin lainnya
 
-require_once ROOT_PATH . 'libraries/constants.php';
+// Rute User (Profil)
+$router->add('GET', '/user/profile', 'UserController', 'profile');
+$router->add('POST', '/user/profile/update', 'UserController', 'updateProfile');
 
-/**
- * Activate autoloader
- */
-if (! @is_readable(AUTOLOAD_FILE)) {
-    die(
-        '<p>File <samp>' . AUTOLOAD_FILE . '</samp> missing or not readable.</p>'
-        . '<p>Most likely you did not run Composer to '
-        . '<a href="https://docs.phpmyadmin.net/en/latest/setup.html#installing-from-git">'
-        . 'install library files</a>.</p>'
-    );
-}
-
-require AUTOLOAD_FILE;
-
-global $route, $containerBuilder, $request;
-
-Common::run();
-
-$dispatcher = Routing::getDispatcher();
-Routing::callControllerForRoute($request, $route, $dispatcher, $containerBuilder);
+$url = $_SERVER['REQUEST_URI'];
+$method = $_SERVER['REQUEST_METHOD'];
+$router->dispatch($url, $method);
+?>
