@@ -7,10 +7,13 @@ $router = new Router();
 
 // ... (rute lain)
 
+// Rute Notifikasi
+$router->add('GET', '/notifications', 'NotificationController', 'index');
+$router->add('POST', '/notifications/read/([0-9]+)', 'NotificationController', 'markAsRead');
 
-// ... (rute lain)
-
-// ... (rute lain)
+// Rute Rating Penjual
+$router->add('GET', '/seller/rate/([0-9]+)/order/([0-9]+)', 'ReviewController', 'rateSeller');
+$router->add('POST', '/seller/rate/([0-9]+)/order/([0-9]+)', 'ReviewController', 'rateSeller');
 
 // Rute Promosi (Admin)
 $router->add('GET', '/admin/promotions', 'PromotionController', 'index');
