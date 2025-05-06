@@ -7,6 +7,23 @@ $router = new Router();
 
 // ... (rute lain)
 
+// ... (rute lain)
+
+// Rute Tiket (Buyer)
+$router->add('GET', '/tickets', 'TicketController', 'index');
+$router->add('GET', '/tickets/create', 'TicketController', 'create');
+$router->add('POST', '/tickets/create', 'TicketController', 'create');
+$router->add('GET', '/tickets/view/([0-9]+)', 'TicketController', 'view');
+$router->add('POST', '/tickets/reply/([0-9]+)', 'TicketController', 'reply');
+
+// Rute Tiket (Admin)
+$router->add('GET', '/admin/tickets', 'AdminTicketController', 'index');
+$router->add('GET', '/admin/tickets/view/([0-9]+)', 'AdminTicketController', 'view');
+$router->add('POST', '/admin/tickets/reply/([0-9]+)', 'AdminTicketController', 'reply');
+$router->add('GET', '/admin/tickets/close/([0-9]+)', 'AdminTicketController', 'close');
+
+// ... (rute lain)
+
 // Rute Voucher (Admin)
 $router->add('GET', '/admin/vouchers', 'PromotionController', 'adminVouchers');
 $router->add('GET', '/admin/vouchers/add', 'PromotionController', 'adminAddVoucher');
