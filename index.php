@@ -5,6 +5,19 @@ Session::start();
 
 $router = new Router();
 
+// ... (rute lain)
+
+// Rute Review
+$router->add('POST', '/review/add/([0-9]+)', 'ReviewController', 'add');
+
+// Rute Seller - Manajemen Gambar Produk
+$router->add('POST', '/seller/product/image/delete/([0-9]+)', 'SellerController', 'deleteProductImage');
+
+// Rute Seller - Manajemen Variasi Produk
+$router->add('POST', '/seller/product/variation/delete/([0-9]+)', 'SellerController', 'deleteProductVariation');
+
+// ... (rute lain)
+
 // Rute Auth
 $router->add('GET', '/auth/login', 'AuthController', 'login');
 $router->add('POST', '/auth/login', 'AuthController', 'login');
