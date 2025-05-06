@@ -6,19 +6,21 @@ require_once 'models/Order.php';
 require_once 'models/OrderItem.php';
 require_once 'models/Product.php'; // Untuk update stok
 
+// ... (require statements)
+require_once 'models/Promotion.php';
+require_once 'models/ShippingMethod.php';
+
 class CheckoutController extends Controller {
     private $orderModel;
     private $orderItemModel;
     private $productModel;
+    private $promotionModel;
+    private $shippingMethodModel;
 
     public function __construct() {
-        Session::start();
-        if (!Session::get('user_id')) {
-            $this->redirect('/auth/login');
-        }
-        $this->orderModel = $this->model('Order');
-        $this->orderItemModel = $this->model('OrderItem');
-        $this->productModel = $this->model('Product');
+        // ... (constructor sebelumnya)
+        $this->promotionModel = $this->model('Promotion');
+        $this->shippingMethodModel = $this->model('ShippingMethod');
     }
 
     public function index() {
@@ -30,75 +32,58 @@ class CheckoutController extends Controller {
             $product = $this->productModel->find($productId);
             if ($product) {
                 $product['quantity'] = $quantity;
+                $promotions = $this->promotionModel->getPromotionsForProduct($productId);
+                $product['promotions'] = $promotions; // Attach promotions to product
                 $productsInCart[] = $product;
                 $totalPrice += $product['harga'] * $quantity;
             } else {
-                Cart::removeItem($productId); // Hapus jika produk tidak ditemukan
+                Cart::removeItem($productId);
             }
         }
 
-        $this->view('buyer/checkout', ['cartItems' => $productsInCart, 'totalPrice' => $totalPrice]);
+        $shippingMethods = $this->shippingMethodModel->getActiveShippingMethods();
+        $this->view('buyer/checkout', ['cartItems' => $productsInCart, 'totalPrice' => $totalPrice, 'shippingMethods' => $shippingMethods]);
     }
 
     public function processOrder() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $userId = Session::get('user_id');
-            $cartItems = Cart::getItems();
+            // ... (proses order sebelumnya)
 
-            if (empty($cartItems)) {
-                $this->redirect('/cart');
-                return;
+            $shippingMethodId = $_POST['shipping_method'] ?? null;
+            $shippingCost = 0;
+            if ($shippingMethodId) {
+                $shippingMethod = $this->shippingMethodModel->find($shippingMethodId);
+                if ($shippingMethod && $shippingMethod['status']) {
+                    $shippingCost = $shippingMethod['biaya'];
+                }
             }
 
-            // Simpan data pesanan ke tabel 'orders'
+            // Aplikasikan promosi di sini sebelum menyimpan order
+            $discountAmount = 0;
+            // Logic untuk menerapkan promosi berdasarkan kode atau otomatis
+
+            $finalTotalAmount = $totalAmount + $shippingCost - $discountAmount;
+
             $orderData = [
                 'buyer_id' => $userId,
-                'total_amount' => 0, // Akan dihitung
+                'total_amount' => $finalTotalAmount,
+                'shipping_cost' => $shippingCost,
                 'status' => 'pending',
                 'created_at' => date('Y-m-d H:i:s')
             ];
             $orderId = $this->orderModel->insert($orderData);
 
-            $totalAmount = 0;
-            $orderSuccess = true;
-            foreach ($cartItems as $productId => $quantity) {
-                $product = $this->productModel->find($productId);
-                if ($product && $product['stok'] >= $quantity) {
-                    // Simpan item pesanan ke tabel 'order_items'
-                    $orderItemData = [
-                        'order_id' => $orderId,
-                        'product_id' => $productId,
-                        'quantity' => $quantity,
-                        'price_per_item' => $product['harga']
-                    ];
-                    $this->orderItemModel->insert($orderItemData);
-                    $totalAmount += $product['harga'] * $quantity;
-
-                    // Update stok produk
-                    $newStok = $product['stok'] - $quantity;
-                    $this->productModel->update($productId, ['stok' => $newStok]);
-                } else {
-                    $this->orderModel->delete($orderId);
-                    Cart::clear();
-                    Session::set('error_message', 'Beberapa produk tidak tersedia atau stok tidak mencukupi.');
-                    $this->redirect('/cart');
-                    $orderSuccess = false;
-                    break;
-                }
-            }
+            // ... (simpan order items seperti sebelumnya)
 
             if ($orderSuccess) {
-                // Update total amount pesanan
-                $this->orderModel->update($orderId, ['total_amount' => $totalAmount]);
-
-                // Bersihkan keranjang setelah pesanan berhasil dibuat
+                $this->orderModel->update($orderId, ['total_amount' => $finalTotalAmount, 'shipping_cost' => $shippingCost]);
                 Cart::clear();
-                $this->redirect('/payment/' . $orderId); // Alihkan ke halaman pembayaran
+                $this->redirect('/payment/' . $orderId);
             }
-
         } else {
             $this->redirect('/checkout');
         }
     }
 }
 ?>
+
