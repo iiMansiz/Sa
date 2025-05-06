@@ -25,6 +25,8 @@ $router->add('GET', '/checkout', 'CheckoutController', 'index');
 $router->add('POST', '/checkout/process', 'CheckoutController', 'processOrder');
 $router->add('GET', '/orders', 'OrderController', 'index');
 $router->add('GET', '/orders/([0-9]+)', 'OrderController', 'detail');
+$router->add('GET', '/payment/([0-9]+)', 'PaymentController', 'index');
+$router->add('POST', '/payment/process/([0-9]+)', 'PaymentController', 'processPayment');
 
 // Rute Penjual
 $router->add('GET', '/seller/dashboard', 'SellerController', 'dashboard');
@@ -33,15 +35,18 @@ $router->add('GET', '/seller/products/add', 'SellerController', 'addProduct');
 $router->add('POST', '/seller/products/add', 'SellerController', 'addProduct');
 $router->add('GET', '/seller/products/edit/([0-9]+)', 'SellerController', 'editProduct');
 $router->add('POST', '/seller/products/edit/([0-9]+)', 'SellerController', 'editProduct');
-$router->add('GET', '/seller/orders', 'SellerController', 'orderList');
-// ... rute penjual lainnya
+$router->add('GET', '/seller/orders', 'OrderController', 'sellerOrderList');
+$router->add('GET', '/seller/orders/([0-9]+)', 'OrderController', 'sellerOrderDetail');
 
 // Rute Admin
 $router->add('GET', '/admin/dashboard', 'AdminController', 'dashboard');
 $router->add('GET', '/admin/users', 'AdminController', 'userList');
 $router->add('GET', '/admin/products', 'AdminController', 'productList');
-$router->add('GET', '/admin/orders', 'AdminController', 'orderList');
-// ... rute admin lainnya
+$router->add('GET', '/admin/orders', 'OrderController', 'adminOrderList');
+$router->add('GET', '/admin/orders/([0-9]+)', 'OrderController', 'adminOrderDetail');
+
+// Rute Update Status Pesanan (Admin & Seller)
+$router->add('POST', '/orders/status/([0-9]+)', 'OrderController', 'updateOrderStatus');
 
 // Rute User (Profil)
 $router->add('GET', '/user/profile', 'UserController', 'profile');
@@ -51,4 +56,3 @@ $url = $_SERVER['REQUEST_URI'];
 $method = $_SERVER['REQUEST_METHOD'];
 $router->dispatch($url, $method);
 ?>
-
