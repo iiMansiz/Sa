@@ -44,6 +44,12 @@ $router->add('GET', '/admin/users', 'AdminController', 'userList');
 $router->add('GET', '/admin/products', 'AdminController', 'productList');
 $router->add('GET', '/admin/orders', 'OrderController', 'adminOrderList');
 $router->add('GET', '/admin/orders/([0-9]+)', 'OrderController', 'adminOrderDetail');
+$router->add('GET', '/admin/categories', 'CategoryController', 'index');
+$router->add('GET', '/admin/categories/add', 'CategoryController', 'add');
+$router->add('POST', '/admin/categories/add', 'CategoryController', 'add');
+$router->add('GET', '/admin/categories/edit/([0-9]+)', 'CategoryController', 'edit');
+$router->add('POST', '/admin/categories/edit/([0-9]+)', 'CategoryController', 'edit');
+$router->add('GET', '/admin/categories/delete/([0-9]+)', 'CategoryController', 'delete');
 
 // Rute Update Status Pesanan (Admin & Seller)
 $router->add('POST', '/orders/status/([0-9]+)', 'OrderController', 'updateOrderStatus');
@@ -56,3 +62,4 @@ $url = $_SERVER['REQUEST_URI'];
 $method = $_SERVER['REQUEST_METHOD'];
 $router->dispatch($url, $method);
 ?>
+
