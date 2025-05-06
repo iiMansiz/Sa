@@ -74,3 +74,36 @@ CREATE TABLE seller_ratings (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE KEY (seller_id, user_id) -- Satu pembeli hanya bisa memberi satu rating per penjual
 );
+CREATE TABLE vouchers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    kode VARCHAR(50) UNIQUE NOT NULL,
+    jenis ENUM('diskon_persen', 'diskon_nominal', 'gratis_ongkir') NOT NULL,
+    nilai DECIMAL(10, 2) NOT NULL,
+    tanggal_mulai DATETIME,
+    tanggal_berakhir DATETIME,
+    minimum_pembelian DECIMAL(10, 2),
+    maksimum_diskon DECIMAL(10, 2),
+    jumlah_tersedia INT,
+    jumlah_digunakan INT DEFAULT 0,
+    status BOOLEAN DEFAULT TRUE,
+    seller_id INT, -- Voucher khusus penjual (NULL untuk platform-wide)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE SET NULL
+);
+CREATE TABLE voucher_users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    voucher_id INT NOT NULL,
+    user_id INT NOT NULL,
+    tanggal_klaim TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (voucher_id) REFERENCES vouchers(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY (voucher_id, user_id)
+);
+CREATE TABLE reports (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    type VARCHAR(50) NOT NULL, -- Contoh: 'sales_daily', 'product_views'
+    title VARCHAR(255) NOT NULL,
+    data TEXT, -- Bisa berupa JSON atau format lainnya
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
