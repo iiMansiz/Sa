@@ -3,6 +3,8 @@ require_once 'core/Controller.php';
 require_once 'core/Session.php';
 require_once 'models/Product.php';
 require_once 'models/Cart.php';
+require_once 'core/Controller.php';
+require_once 'models/Voucher.php';
 
 class ProductController extends Controller {
     // ... (constructor)
@@ -24,7 +26,47 @@ class ProductController extends Controller {
 }
 
 class CartController extends Controller {
-    // ... (constructor)
+    private $productModel;
+    private $voucherModel;
+
+    public function __construct() {
+        Session::start();
+        $this->productModel = $this->model('Product');
+        $this->voucherModel = $this->model('Voucher');
+    }
+
+    public function index() {
+        $cartItems = Cart::getItems();
+        $productsInCart = [];
+        $totalPrice = 0;
+
+        foreach ($cartItems as $itemKey => $quantity) {
+            list($productId, $variationId) = explode('_', $itemKey);
+            $product = $this->productModel->find($productId);
+            if ($product) {
+                $product['quantity'] = $quantity;
+                // Ambil informasi variasi jika ada
+                if ($variationId) {
+                    $variation = $this->productModel->find('product_variations', $variationId);
+                    $product['variation'] = $variation;
+                    $totalPrice += ($variation['harga'] ?? $product['harga']) * $quantity;
+                } else {
+                    $totalPrice += $product['harga'] * $quantity;
+                }
+                $productsInCart[] = $product;
+            } else {
+                Cart::removeItemByKey($itemKey); // Hapus jika produk tidak ditemukan
+            }
+        }
+
+        $appliedVoucherId = Session::get('applied_voucher_id');
+        $voucher = null;
+        if ($appliedVoucherId) {
+            $voucher = $this->voucherModel->find($appliedVoucherId);
+        }
+
+        $this->view('buyer/cart', ['cartItems' => $productsInCart, 'totalPrice' => $totalPrice, 'voucher' => $voucher]);
+    }
 
     public function add($productId) {
         if (!Session::get('user_id')) {
@@ -33,23 +75,69 @@ class CartController extends Controller {
         }
 
         $quantity = $_POST['quantity'] ?? 1;
-        $variationId = $_POST['variation_id'] ?? null; // Jika ada variasi
+        $variationId = $_POST['variation_id'] ?? null;
 
-        // Logic untuk menambahkan ke keranjang dengan mempertimbangkan variasi
-        $cartKey = 'shopping_cart_' . Session::get('user_id');
-        $cart = Session::get($cartKey, []);
         $itemKey = $productId . ($variationId ? '_' . $variationId : '');
-
-        if (isset($cart[$itemKey])) {
-            $cart[$itemKey] += $quantity;
-        } else {
-            $cart[$itemKey] = $quantity;
-        }
-        Session::set($cartKey, $cart);
+        Cart::addItem($itemKey, $quantity);
 
         $this->redirect('/cart');
     }
 
-    // ... (metode lain perlu disesuaikan untuk menangani key keranjang dengan variasi)
-}
+    public function update() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            foreach ($_POST['quantity'] as $itemKey => $quantity) {
+                if ($quantity > 0) {
+                    Cart::updateItem($itemKey, $quantity);
+                } else {
+                    Cart::removeItemByKey($itemKey);
+                }
+            }
+        }
+        $this->redirect('/cart');
+    }
 
+    public function remove($itemKey) {
+        Cart::removeItemByKey($itemKey);
+        $this->redirect('/cart');
+    }
+
+    public function clear() {
+        Cart::clear();
+        Session::delete('applied_voucher_id'); // Hapus voucher saat keranjang dikosongkan
+        $this->redirect('/cart');
+    }
+
+    public function applyVoucher() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $voucherCode = trim($_POST['voucher_code']);
+            if (empty($voucherCode)) {
+                Session::set('error_message', 'Kode voucher tidak boleh kosong.');
+                $this->redirect('/cart');
+                return;
+            }
+
+            $voucher = $this->voucherModel->getVoucherByCode($voucherCode);
+            if ($voucher) {
+                $userId = Session::get('user_id');
+                if ($voucher['jumlah_tersedia'] !== null && $voucher['jumlah_digunakan'] >= $voucher['jumlah_tersedia']) {
+                    Session::set('error_message', 'Voucher sudah habis digunakan.');
+                } elseif ($userId && $this->voucherModel->isVoucherClaimed($voucher['id'], $userId)) {
+                    Session::set('error_message', 'Anda sudah mengklaim voucher ini sebelumnya.');
+                } else {
+                    Session::set('applied_voucher_id', $voucher['id']);
+                    Session::set('success_message', 'Voucher berhasil diterapkan!');
+                }
+            } else {
+                Session::set('error_message', 'Kode voucher tidak valid atau tidak berlaku.');
+            }
+        }
+        $this->redirect('/cart');
+    }
+
+    public function removeVoucher() {
+        Session::delete('applied_voucher_id');
+        Session::set('success_message', 'Voucher berhasil dihapus.');
+        $this->redirect('/cart');
+    }
+}
+?>
