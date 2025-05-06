@@ -16,7 +16,15 @@ $router->add('GET', '/auth/logout', 'AuthController', 'logout');
 $router->add('GET', '/', 'HomeController', 'index');
 $router->add('GET', '/products', 'HomeController', 'index');
 $router->add('GET', '/product/([0-9]+)', 'ProductController', 'detail');
-// ... rute pembeli lainnya (cart, checkout, orders)
+$router->add('GET', '/cart', 'CartController', 'index');
+$router->add('GET', '/cart/add/([0-9]+)', 'CartController', 'add');
+$router->add('POST', '/cart/update', 'CartController', 'update');
+$router->add('GET', '/cart/remove/([0-9]+)', 'CartController', 'remove');
+$router->add('GET', '/cart/clear', 'CartController', 'clear');
+$router->add('GET', '/checkout', 'CheckoutController', 'index');
+$router->add('POST', '/checkout/process', 'CheckoutController', 'processOrder');
+$router->add('GET', '/orders', 'OrderController', 'index');
+$router->add('GET', '/orders/([0-9]+)', 'OrderController', 'detail');
 
 // Rute Penjual
 $router->add('GET', '/seller/dashboard', 'SellerController', 'dashboard');
@@ -43,3 +51,4 @@ $url = $_SERVER['REQUEST_URI'];
 $method = $_SERVER['REQUEST_METHOD'];
 $router->dispatch($url, $method);
 ?>
+
