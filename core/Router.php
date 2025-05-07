@@ -1,33 +1,46 @@
 <?php
+namespace Core;
+
 class Router {
     protected $routes = [];
 
-    public function add($method, $route, $controller, $action) {
-        $this->routes[$method][$route] = ['controller' => $controller, 'action' => $action];
+    public function add($method, $route, $controller, $action, $middleware = []) {
+        $this->routes[$method][$route] = ['controller' => $controller, 'action' => $action, 'middleware' => $middleware];
     }
 
     public function dispatch($url, $method) {
-        $url = trim($url, '/');
+        $url = $this->removeTrailingSlash($url);
+
         if (isset($this->routes[$method])) {
-            foreach ($this->routes[$method] as $route => $target) {
-                if (preg_match('#^' . $route . '$#i', $url, $matches)) {
-                    $controllerName = $target['controller'];
-                    $actionName = $target['action'];
+            foreach ($this->routes[$method] as $route => $params) {
+                if (preg_match('#^' . $this->convertRouteToRegex($route) . '$#i', $url, $matches)) {
+                    array_shift($matches); // Remove the full match
 
-                    require_once 'controllers/' . $controllerName . '.php';
-                    $controller = new $controllerName();
+                    $controllerName = 'App\\Controllers\\' . $params['controller'];
+                    $actionName = $params['action'];
 
-                    // Remove the first element (full match)
-                    array_shift($matches);
-
-                    if (method_exists($controller, $actionName)) {
-                        call_user_func_array([$controller, $actionName], $matches);
-                        return;
+                    if (class_exists($controllerName)) {
+                        $controller = new $controllerName();
+                        if (method_exists($controller, $actionName)) {
+                            // Apply middleware (belum diimplementasikan)
+                            call_user_func_array([$controller, $actionName], $matches);
+                            return;
+                        }
                     }
                 }
             }
         }
-        require 'views/errors/404.php';
+
+        // Handle 404 Not Found
+        http_response_code(404);
+        echo "404 Not Found";
+    }
+
+    protected function convertRouteToRegex($route) {
+        return preg_replace('/\/([a-zA-Z0-9]+)\/?/', '/?$1/?', preg_replace('/\//', '\\/', $route));
+    }
+
+    protected function removeTrailingSlash($url) {
+        return rtrim($url, '/');
     }
 }
-?>
