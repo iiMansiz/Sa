@@ -3,11 +3,9 @@ require_once 'autoload.php';
 require_once 'core/Session.php';
 Session::start();
 
+use Core\Router;
+
 $router = new Router();
-
-// ... (rute lain)
-
-// ... (rute lain)
 
 // Rute Tiket (Buyer)
 $router->add('GET', '/tickets', 'TicketController', 'index');
@@ -21,8 +19,6 @@ $router->add('GET', '/admin/tickets', 'AdminTicketController', 'index');
 $router->add('GET', '/admin/tickets/view/([0-9]+)', 'AdminTicketController', 'view');
 $router->add('POST', '/admin/tickets/reply/([0-9]+)', 'AdminTicketController', 'reply');
 $router->add('GET', '/admin/tickets/close/([0-9]+)', 'AdminTicketController', 'close');
-
-// ... (rute lain)
 
 // Rute Voucher (Admin)
 $router->add('GET', '/admin/vouchers', 'PromotionController', 'adminVouchers');
@@ -51,9 +47,6 @@ $router->add('GET', '/admin/reports/products', 'ReportController', 'adminProduct
 $router->add('GET', '/seller/reports/sales', 'ReportController', 'sellerSalesOverview');
 $router->add('GET', '/seller/reports/products', 'ReportController', 'sellerProductPerformance');
 
-// ... (rute lain)
-
-
 // Rute Notifikasi
 $router->add('GET', '/notifications', 'NotificationController', 'index');
 $router->add('POST', '/notifications/read/([0-9]+)', 'NotificationController', 'markAsRead');
@@ -80,9 +73,6 @@ $router->add('GET', '/admin/shipping/edit/([0-9]+)', 'ShippingController', 'edit
 $router->add('POST', '/admin/shipping/edit/([0-9]+)', 'ShippingController', 'edit');
 $router->add('GET', '/admin/shipping/delete/([0-9]+)', 'ShippingController', 'delete');
 
-// ... (rute lain)
-
-
 // Rute Review
 $router->add('POST', '/review/add/([0-9]+)', 'ReviewController', 'add');
 
@@ -91,8 +81,6 @@ $router->add('POST', '/seller/product/image/delete/([0-9]+)', 'SellerController'
 
 // Rute Seller - Manajemen Variasi Produk
 $router->add('POST', '/seller/product/variation/delete/([0-9]+)', 'SellerController', 'deleteProductVariation');
-
-// ... (rute lain)
 
 // Rute Auth
 $router->add('GET', '/auth/login', 'AuthController', 'login');
@@ -151,4 +139,3 @@ $url = $_SERVER['REQUEST_URI'];
 $method = $_SERVER['REQUEST_METHOD'];
 $router->dispatch($url, $method);
 ?>
-
