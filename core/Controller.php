@@ -1,35 +1,32 @@
 <?php
-class Controller {
-    protected function view($path, $data = []) {
-        extract($data);
-        $fullPath = 'views/' . $path . '.php';
-        if (file_exists($fullPath)) {
-            require_once 'views/layouts/main_layout.php'; // Asumsi ada layout utama
-        } else {
-            die("View not found: " . $path);
-        }
-    }
+namespace Core;
 
-    protected function model($modelName) {
-        $modelPath = 'models/' . $modelName . '.php';
+class Controller {
+    protected function model($model) {
+        $modelPath = '../app/Models/' . $model . '.php';
         if (file_exists($modelPath)) {
             require_once $modelPath;
-            return new $modelName();
+            $modelClass = 'App\\Models\\' . $model;
+            return new $modelClass();
+        }
+        return null;
+    }
+
+    protected function view($view, $data = [], $layout = 'main_layout') {
+        $viewPath = '../views/' . $view . '.php';
+        $layoutPath = '../views/layouts/' . $layout . '.php';
+
+        if (file_exists($viewPath) && file_exists($layoutPath)) {
+            require_once $layoutPath;
+        } elseif (file_exists($viewPath)) {
+            require_once $viewPath;
         } else {
-            die("Model not found: " . $modelName);
+            die("View {$view} not found.");
         }
     }
 
     protected function redirect($url) {
-        header('Location: ' . $url);
-        exit();
-    }
-
-    protected function jsonResponse($data, $statusCode = 200) {
-        http_response_code($statusCode);
-        header('Content-Type: application/json');
-        echo json_encode($data);
+        header('Location: ' . BASE_URL . $url);
         exit();
     }
 }
-?>
