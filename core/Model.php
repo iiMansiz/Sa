@@ -1,51 +1,117 @@
 <?php
+namespace Core;
+
+use PDO;
+use PDOException;
+
 class Model {
     protected $db;
     protected $table;
+    protected $allowedFields = [];
 
     public function __construct() {
-        $this->db = Database::getInstance();
+        $config = require '../config/database.php';
+        try {
+            $this->db = new PDO("mysql:host=" . $config['host'] . ";dbname=" . $config['dbname'], $config['username'], $config['password']);
+            $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        } catch (PDOException $e) {
+            die("Database connection failed: " . $e->getMessage());
+        }
     }
 
-    public function all() {
-        $sql = "SELECT * FROM " . $this->table;
-        $result = $this->db->query($sql);
-        return $this->db->fetchAll($result);
+    public function getDB() {
+        return $this->db;
+    }
+
+    public function getAll() {
+        $stmt = $this->db->query("SELECT * FROM {$this->table}");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function find($id) {
-        $sql = "SELECT * FROM " . $this->table . " WHERE id = " . (int) $id;
-        $result = $this->db->query($sql);
-        return $this->db->fetch($result);
+        $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE id = :id");
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function where($column, $value, $operator = '=') {
-        $value = $this->db->escapeString($value);
-        $sql = "SELECT * FROM " . $this->table . " WHERE " . $column . " " . $operator . " '" . $value . "'";
-        $result = $this->db->query($sql);
-        return $this->db->fetchAll($result);
+    public function where($column, $value) {
+        $this->whereClause = "WHERE {$column} = :value";
+        $this->whereValue = $value;
+        return $this;
     }
 
-    public function insert($data) {
-        $columns = implode(', ', array_keys($data));
-        $values = "'" . implode("', '", array_map([$this->db, 'escapeString'], array_values($data))) . "'";
-        $sql = "INSERT INTO " . $this->table . " (" . $columns . ") VALUES (" . $values . ")";
-        $this->db->query($sql);
-        return $this->db->getInstance()->insert_id;
+    public function orderBy($column, $direction = 'ASC') {
+        $this->orderByClause = "ORDER BY {$column} {$direction}";
+        return $this;
     }
 
-    public function update($id, $data) {
-        $setClauses = [];
-        foreach ($data as $key => $value) {
-            $setClauses[] = $key . " = '" . $this->db->escapeString($value) . "'";
+    public function get() {
+        $sql = "SELECT * FROM {$this->table} " . ($this->whereClause ?? '') . " " . ($this->orderByClause ?? '');
+        $stmt = $this->db->prepare($sql);
+        if (isset($this->whereValue)) {
+            $stmt->bindParam(':value', $this->whereValue);
         }
-        $sql = "UPDATE " . $this->table . " SET " . implode(', ', $setClauses) . " WHERE id = " . (int) $id;
-        return $this->db->query($sql);
+        $stmt->execute();
+        $this->resetQueryClauses();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function first() {
+        $sql = "SELECT * FROM {$this->table} " . ($this->whereClause ?? '');
+        $stmt = $this->db->prepare($sql);
+        if (isset($this->whereValue)) {
+            $stmt->bindParam(':value', $this->whereValue);
+        }
+        $stmt->execute();
+        $this->resetQueryClauses();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function insert(array $data) {
+        $fields = implode(', ', array_keys($data));
+        $placeholders = ':' . implode(', :', array_keys($data));
+        $sql = "INSERT INTO {$this->table} ({$fields}) VALUES ({$placeholders})";
+        $stmt = $this->db->prepare($sql);
+        try {
+            $stmt->execute($data);
+            return $this->db->lastInsertId();
+        } catch (PDOException $e) {
+            // Log error
+            return false;
+        }
+    }
+
+    public function update($id, array $data) {
+        $setClauses = [];
+        foreach (array_keys($data) as $field) {
+            $setClauses[] = "{$field} = :{$field}";
+        }
+        $sql = "UPDATE {$this->table} SET " . implode(', ', $setClauses) . " WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $data['id'] = $id;
+        try {
+            return $stmt->execute($data);
+        } catch (PDOException $e) {
+            // Log error
+            return false;
+        }
     }
 
     public function delete($id) {
-        $sql = "DELETE FROM " . $this->table . " WHERE id = " . (int) $id;
-        return $this->db->query($sql);
+        $stmt = $this->db->prepare("DELETE FROM {$this->table} WHERE id = :id");
+        $stmt->bindParam(':id', $id);
+        try {
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            // Log error
+            return false;
+        }
+    }
+
+    protected function resetQueryClauses() {
+        $this->whereClause = null;
+        $this->whereValue = null;
+        $this->orderByClause = null;
     }
 }
-?>
