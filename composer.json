@@ -5,14 +5,13 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Controllers\\": "controllers/",
-            "Models\\": "models/",
-            "Core\\": "core/",
-            "Views\\": "views/"
+            "App\\": "app/",
+            "Core\\": "core/"
         }
     },
     "require": {
-        "php": "^7.4|^8.0"
+        "php": "^7.4|^8.0",
+        "vlucas/phpdotenv": "^5.6"
     },
     "config": {
         "optimize-autoloader": true,
