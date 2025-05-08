@@ -1,6 +1,7 @@
 <?php
 require_once 'autoload.php';
 require_once 'core/Session.php';
+require_once 'core/Router.php';
 Session::start();
 
 use Core\Router;
